@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Belajar Laravel</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f2f5;--surface:#ffffff;--surface2:#f8fafc;--border:#e8edf2;
+  --text:#0d1117;--text2:#57606a;--text3:#afb8c1;
+  --accent:#2563eb;--accent-light:#eff6ff;--accent-mid:#bfdbfe;
+  --success:#16a34a;--success-light:#f0fdf4;
+  --warn:#d97706;--warn-light:#fffbeb;
+  --danger:#dc2626;--danger-light:#fef2f2;
+  --purple:#7c3aed;--purple-light:#f5f3ff;
+  --sidebar:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+a{text-decoration:none;color:inherit}
+button,input,select,textarea{font-family:'Sora',sans-serif}
+
+/* ── SIDEBAR ── */
+.sb{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);background:#0d1117;display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sb-logo{padding:1.25rem 1rem .75rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid #21262d}
+.sb-icon{width:34px;height:34px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.sb-name{font-size:14px;font-weight:600;color:#f0f6fc}
+.sb-url{font-size:11px;color:#6e7681;margin-top:1px}
+.sb-section{padding:.75rem 1rem .25rem;font-size:10px;font-weight:500;color:#484f58;letter-spacing:.08em;text-transform:uppercase}
+.nav{display:flex;align-items:center;gap:9px;padding:.55rem 1rem;color:#8b949e;font-size:13px;cursor:pointer;border-radius:8px;margin:1px .5rem;transition:all .15s;position:relative}
+.nav:hover{background:#161b22;color:#e6edf3}
+.nav.on{background:#161b22;color:#f0f6fc}
+.nav.on::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:2px}
+.nav-ico{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:600;padding:1px 7px;border-radius:100px;min-width:20px;text-align:center}
+.sb-foot{margin-top:auto;padding:.875rem 1rem;border-top:1px solid #21262d;display:flex;align-items:center;gap:9px}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#818cf8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.av-name{font-size:13px;font-weight:500;color:#f0f6fc}
+.av-role{font-size:11px;color:#6e7681}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-title{font-size:16px;font-weight:600}
+.tb-crumb{font-size:11px;color:var(--text3);margin-top:1px}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:var(--text2);transition:all .15s;position:relative}
+.tb-btn:hover{background:var(--surface2)}
+.ndot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:2px solid var(--surface)}
+.searchbox{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.3rem .7rem}
+.searchbox input{border:none;background:none;outline:none;font-size:13px;color:var(--text);width:150px;font-family:'Sora',sans-serif}
+
+/* ── CONTENT ── */
+.content{padding:1.5rem;flex:1}
+.section{display:none}.section.on{display:block}
+
+/* ── STAT CARDS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;display:flex;align-items:flex-start;justify-content:space-between;animation:fadeUp .35s ease both}
+.sc:nth-child(1){animation-delay:.05s}.sc:nth-child(2){animation-delay:.1s}.sc:nth-child(3){animation-delay:.15s}.sc:nth-child(4){animation-delay:.2s}
+.sc-info{}
+.sc-label{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.sc-val{font-size:26px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.sc-sub{font-size:11px;margin-top:4px;color:var(--text3)}
+.sc-sub.up{color:var(--success)}.sc-sub.warn{color:var(--warn)}
+.sc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.g31{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.g13{display:grid;grid-template-columns:1fr 2fr;gap:1rem;margin-bottom:1.5rem}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;animation:fadeUp .35s ease both}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.ct{font-size:13px;font-weight:600}
+.cs{font-size:11px;color:var(--text3);margin-top:2px}
+.cb{padding:1.25rem}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:100px;font-size:11px;font-weight:500}
+.bg{background:var(--surface2);color:var(--text2)}
+.bb{background:var(--accent-light);color:var(--accent)}
+.bs{background:var(--success-light);color:var(--success)}
+.bw{background:var(--warn-light);color:var(--warn)}
+.bd{background:var(--danger-light);color:var(--danger)}
+.bp{background:var(--purple-light);color:var(--purple)}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:.625rem 1rem;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);background:var(--surface2)}
+tbody td{padding:.75rem 1rem;border-bottom:1px solid #f6f8fa;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+
+/* ── PROGRESS ── */
+.prow{display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
+.plabel{font-size:12px;min-width:120px;color:var(--text2)}
+.ptrack{flex:1;height:5px;background:var(--surface2);border-radius:100px;overflow:hidden}
+.pfill{height:5px;border-radius:100px;transition:width .8s ease}
+.ppct{font-size:11px;color:var(--text3);min-width:32px;text-align:right;font-family:'JetBrains Mono',monospace}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:.45rem .9rem;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all .15s;font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn-p{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-p:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-d{background:var(--danger-light);color:var(--danger);border-color:#fecaca}
+.btn-d:hover{background:#fee2e2}
+.btn-sm{padding:.3rem .7rem;font-size:11px}
+
+/* ── FORM ── */
+.fg{margin-bottom:.875rem}
+.fl{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.fc{width:100%;padding:.5rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+.fc:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea.fc{resize:vertical;min-height:75px;line-height:1.5}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,17,23,.6);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+.overlay.on{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:scaleIn .2s ease}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.mt{font-size:14px;font-weight:600}
+.mc{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2)}
+.mc:hover{background:var(--surface2)}
+.mb{padding:1.25rem}
+.mf{padding:.875rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ── CHART ── */
+.chart-wrap{position:relative;height:210px}
+
+/* ── ACTIVITY ── */
+.act-item{display:flex;gap:10px;padding:.625rem 0;border-bottom:1px solid #f6f8fa}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.act-text{font-size:12px;line-height:1.5;color:var(--text2)}
+.act-time{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ── QUICK ── */
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem}
+.qi{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.75rem .5rem;text-align:center;cursor:pointer;transition:all .15s}
+.qi:hover{background:var(--accent-light);border-color:var(--accent-mid)}
+.qi-icon{font-size:20px;margin-bottom:4px}
+.qi-label{font-size:11px;font-weight:500;color:var(--text2)}
+
+/* ── JOBDESK ── */
+.phase-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.ptab{padding:5px 13px;border-radius:var(--border-radius,8px);border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text2);font-weight:500;transition:all .15s}
+.ptab:hover{background:var(--surface2)}
+.ptab.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid)}
+.ph-sec{display:none}.ph-sec.on{display:block}
+.ph-header{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:.875rem}
+.ph-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.ph-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.wcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:.625rem;overflow:hidden}
+.whead{display:flex;align-items:center;gap:9px;padding:.875rem 1.25rem;cursor:pointer;user-select:none}
+.wbadge{font-size:10px;font-weight:600;padding:2px 9px;border-radius:100px;white-space:nowrap}
+.wtitle{font-size:13px;font-weight:500;flex:1}
+.wmeta{font-size:11px;color:var(--text3)}
+.wpct{font-size:11px;min-width:32px;text-align:right;font-family:'JetBrains Mono',monospace}
+.wbar-wrap{height:3px;background:var(--surface2);margin:0 1.25rem;overflow:hidden;border-radius:3px}
+.wbar-fill{height:3px;border-radius:3px;transition:width .4s}
+.wbody{display:none;padding:.75rem 1.25rem}
+.wbody.on{display:block}
+.trow{display:flex;align-items:flex-start;gap:9px;padding:.5rem 0;border-bottom:1px solid #f6f8fa}
+.trow:last-child{border-bottom:none}
+.tcb{width:14px;height:14px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:var(--accent)}
+.tcontent{flex:1}
+.ttext{font-size:12px;line-height:1.5}
+.ttext.done{text-decoration:line-through;color:var(--text3)}
+.tcode{font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--surface2);color:var(--text2);padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block}
+.tnote-btn{font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--text3);margin-top:4px}
+.tnote{width:100%;margin-top:5px;font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);resize:vertical;min-height:50px;line-height:1.5;display:none}
+.tnote.on{display:block}
+
+/* ── UPLOAD ZONE ── */
+.upzone{border:1.5px dashed var(--border);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;font-size:12px;color:var(--text3);transition:all .15s;outline:none}
+.upzone:hover,.upzone.drag{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.prev-img{display:none;max-width:100%;max-height:130px;border-radius:8px;margin-top:8px;border:1px solid var(--border)}
+
+/* ── ANIM ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){.stats{grid-template-columns:repeat(2,1fr)}.g2,.g31,.g13{grid-template-columns:1fr}}
+@media(max-width:768px){.sb{transform:translateX(-100%)}.sb.open{transform:translateX(0)}.main{margin-left:0}.stats{grid-template-columns:1fr 1fr}.qgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb" id="sb">
+  <div class="sb-logo">
+    <div class="sb-icon">L</div>
+    <div>
+      <div class="sb-name">LaravelApp</div>
+      <div class="sb-url">example-app.test</div>
+    </div>
+  </div>
+
+  <div class="sb-section">Aplikasi</div>
+  <div class="nav on" onclick="go('dashboard',this)"><span class="nav-ico">⊞</span>Dashboard</div>
+  <div class="nav" onclick="go('produk',this)"><span class="nav-ico">📦</span>Produk<span class="nav-badge" id="nb-p">0</span></div>
+  <div class="nav" onclick="go('users',this)"><span class="nav-ico">👥</span>Users</div>
+  <div class="nav" onclick="go('laporan',this)"><span class="nav-ico">📊</span>Laporan</div>
+
+  <div class="sb-section">Belajar</div>
+  <div class="nav" onclick="go('jobdesk',this)"><span class="nav-ico">✅</span>Jobdesk 90 Hari</div>
+  <div class="nav" onclick="go('kendala',this)"><span class="nav-ico">🔧</span>Kendala Teknis<span class="nav-badge" id="nb-k">0</span></div>
+  <div class="nav" onclick="go('routes',this)"><span class="nav-ico">🛣️</span>Route List</div>
+
+  <div class="sb-foot">
+    <div class="av">A</div>
+    <div>
+      <div class="av-name">Arun</div>
+      <div class="av-role">Developer</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div>
+        <div class="tb-title" id="pg-title">Dashboard</div>
+        <div class="tb-crumb" id="pg-crumb">example-app.test / dashboard</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="searchbox"><span>🔍</span><input placeholder="Cari..."></div>
+      <button class="tb-btn" onclick="go('kendala',null)">🔧<span class="ndot" id="ndot" style="display:none"></span></button>
+      <div class="av" style="cursor:pointer">A</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="section on" id="sec-dashboard">
+      <div class="stats">
+        <div class="sc"><div class="sc-info"><div class="sc-label">Total Produk</div><div class="sc-val" id="d-produk">0</div><div class="sc-sub up">dari database</div></div><div class="sc-icon" style="background:#eff6ff">📦</div></div>
+        <div class="sc"><div class="sc-info"><div class="sc-label">Progress Belajar</div><div class="sc-val" id="d-prog">0%</div><div class="sc-sub" id="d-prog-sub">0/0 tugas</div></div><div class="sc-icon" style="background:#f0fdf4">📚</div></div>
+        <div class="sc"><div class="sc-info"><div class="sc-label">Kendala Aktif</div><div class="sc-val" id="d-kendala">0</div><div class="sc-sub warn">belum selesai</div></div><div class="sc-icon" style="background:#fef2f2">🔧</div></div>
+        <div class="sc"><div class="sc-info"><div class="sc-label">Hari Belajar</div><div class="sc-val" id="d-hari">90</div><div class="sc-sub">target hari</div></div><div class="sc-icon" style="background:#f5f3ff">🗓️</div></div>
+      </div>
+
+      <div class="g31">
+        <div class="card">
+          <div class="ch"><div><div class="ct">Progress Per Fase</div><div class="cs">Jobdesk 90 hari belajar</div></div><span class="badge bb">Chart</span></div>
+          <div class="cb"><div class="chart-wrap"><canvas id="chartProgress"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Akses Cepat</div></div>
+          <div class="cb">
+            <div class="qgrid">
+              <div class="qi" onclick="go('produk',null)"><div class="qi-icon">📦</div><div class="qi-label">Produk</div></div>
+              <div class="qi" onclick="openAddProduk()"><div class="qi-icon">➕</div><div class="qi-label">Tambah</div></div>
+              <div class="qi" onclick="go('laporan',null)"><div class="qi-icon">📊</div><div class="qi-label">Laporan</div></div>
+              <div class="qi" onclick="go('jobdesk',null)"><div class="qi-icon">✅</div><div class="qi-label">Jobdesk</div></div>
+              <div class="qi" onclick="go('kendala',null)"><div class="qi-icon">🔧</div><div class="qi-label">Kendala</div></div>
+              <div class="qi" onclick="go('routes',null)"><div class="qi-icon">🛣️</div><div class="qi-label">Routes</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><div><div class="ct">Progress Jobdesk</div><div class="cs">Per fase belajar</div></div><button class="btn btn-sm" onclick="go('jobdesk',null)">Lihat Semua</button></div>
+          <div class="cb" id="d-phaselist"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Aktivitas Terbaru</div></div>
+          <div class="cb" id="d-activity">
+            <div class="act-item"><div class="act-dot" style="background:#eff6ff">🚀</div><div><div class="act-text">Laravel Herd berjalan di example-app.test</div><div class="act-time">Server aktif</div></div></div>
+            <div class="act-item"><div class="act-dot" style="background:#f0fdf4">✅</div><div><div class="act-text">Jobdesk 90 hari siap dikerjakan</div><div class="act-time">Klik tab Jobdesk</div></div></div>
+            <div class="act-item"><div class="act-dot" style="background:#f5f3ff">📦</div><div><div class="act-text">Belum ada produk — mulai tambah data</div><div class="act-time">Klik tab Produk</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PRODUK ═══ -->
+    <div class="section" id="sec-produk">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Manajemen Produk</div><div class="cs">Data produk — simulasi database MySQL</div></div><button class="btn btn-p" onclick="openAddProduk()">+ Tambah Produk</button></div>
+        <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" class="fc" style="flex:1;min-width:160px;max-width:260px" id="p-search" placeholder="🔍 Cari produk..." oninput="renderProduk()">
+          <select class="fc" style="width:auto" id="p-filter" onchange="renderProduk()">
+            <option value="">Semua Status</option>
+            <option value="aktif">Aktif</option>
+            <option value="nonaktif">Non-aktif</option>
+          </select>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>#</th><th>Nama Produk</th><th>Deskripsi</th><th>Harga</th><th>Stok</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="p-tbody"></tbody>
+          </table>
+          <div id="p-empty" style="display:none;text-align:center;padding:2.5rem;color:var(--text3);font-size:13px">
+            <div style="font-size:32px;margin-bottom:8px">📭</div>Belum ada produk. Klik "+ Tambah Produk"
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ USERS ═══ -->
+    <div class="section" id="sec-users">
+      <div class="card">
+        <div class="ch"><div class="ct">Manajemen Users</div></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>#</th><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th>Bergabung</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--text3)">1</td>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:28px;height:28px;font-size:10px">A</div>Arun</div></td>
+                <td style="color:var(--text2);font-size:12px">arun@example.com</td>
+                <td><span class="badge bb">Admin</span></td>
+                <td><span class="badge bs">● Aktif</span></td>
+                <td style="font-size:12px;color:var(--text3)" id="u-joined">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LAPORAN ═══ -->
+    <div class="section" id="sec-laporan">
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><div class="ct">Status Produk</div></div>
+          <div class="cb"><div class="chart-wrap"><canvas id="chartLaporan"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Ringkasan Data</div></div>
+          <div class="cb">
+            <div class="prow"><span class="plabel">Total Produk</span><div class="ptrack"><div class="pfill" id="lp1" style="width:0%;background:var(--accent)"></div></div><span class="ppct" id="lv1">0</span></div>
+            <div class="prow"><span class="plabel">Total Stok</span><div class="ptrack"><div class="pfill" id="lp2" style="width:0%;background:var(--success)"></div></div><span class="ppct" id="lv2">0</span></div>
+            <div class="prow"><span class="plabel">Progress Belajar</span><div class="ptrack"><div class="pfill" id="lp3" style="width:0%;background:var(--warn)"></div></div><span class="ppct" id="lv3">0%</span></div>
+            <div class="prow"><span class="plabel">Kendala Selesai</span><div class="ptrack"><div class="pfill" id="lp4" style="width:0%;background:var(--purple)"></div></div><span class="ppct" id="lv4">0%</span></div>
+            <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              <div style="background:var(--surface2);border-radius:10px;padding:.875rem;text-align:center">
+                <div style="font-size:22px;font-weight:600;font-family:'JetBrains Mono',monospace" id="lstat1">0</div>
+                <div style="font-size:11px;color:var(--text3)">Produk Aktif</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:10px;padding:.875rem;text-align:center">
+                <div style="font-size:22px;font-weight:600;font-family:'JetBrains Mono',monospace" id="lstat2">0</div>
+                <div style="font-size:11px;color:var(--text3)">Kendala Open</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ JOBDESK ═══ -->
+    <div class="section" id="sec-jobdesk">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:15px;font-weight:600">Jobdesk 90 Hari — PHP, Laravel & MySQL</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Centang setiap tugas jika sudah dipahami dan dipraktikkan</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:13px;color:var(--text2)">Total: <span id="jd-done">0</span>/<span id="jd-total">0</span> (<span id="jd-pct">0%</span>)</div>
+          <button class="btn btn-d btn-sm" onclick="if(confirm('Reset semua progress jobdesk?')){Object.keys(jdState).forEach(k=>delete jdState[k]);saveAll();renderJobdesk();updateStats()}">Reset</button>
+        </div>
+      </div>
+      <div class="phase-tabs" id="phase-tabs"></div>
+      <div id="phase-content"></div>
+    </div>
+
+    <!-- ═══ KENDALA ═══ -->
+    <div class="section" id="sec-kendala">
+      <div class="card">
+        <div class="ch"><div><div class="ct">Kendala Teknis</div><div class="cs">Catat semua kendala saat belajar</div></div><button class="btn btn-p" onclick="openAddKendala()">+ Tambah Kendala</button></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;padding:.875rem 1.25rem;border-bottom:1px solid var(--border)">
+          <div style="text-align:center;padding:.75rem;background:var(--surface2);border-radius:10px"><div style="font-size:20px;font-weight:600;font-family:'JetBrains Mono',monospace" id="ks-t">0</div><div style="font-size:10px;color:var(--text3)">Total</div></div>
+          <div style="text-align:center;padding:.75rem;background:var(--danger-light);border-radius:10px"><div style="font-size:20px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--danger)" id="ks-o">0</div><div style="font-size:10px;color:var(--danger)">Belum</div></div>
+          <div style="text-align:center;padding:.75rem;background:var(--warn-light);border-radius:10px"><div style="font-size:20px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--warn)" id="ks-p">0</div><div style="font-size:10px;color:var(--warn)">Diproses</div></div>
+          <div style="text-align:center;padding:.75rem;background:var(--success-light);border-radius:10px"><div style="font-size:20px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--success)" id="ks-d">0</div><div style="font-size:10px;color:var(--success)">Selesai</div></div>
+        </div>
+        <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" class="fc" style="flex:1;min-width:160px;max-width:260px" id="k-search" placeholder="🔍 Cari kendala..." oninput="renderKendala()">
+          <select class="fc" style="width:auto" id="k-filter" onchange="renderKendala()">
+            <option value="">Semua Status</option>
+            <option value="open">Belum Selesai</option>
+            <option value="progress">Diproses</option>
+            <option value="done">Selesai</option>
+          </select>
+          <button class="btn btn-sm" onclick="document.getElementById('k-search').value='';document.getElementById('k-filter').value='';renderKendala()">Reset</button>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th style="width:75px">Gambar</th><th>Kendala</th><th>Solusi / Tindakan</th><th style="width:85px">Tanggal</th><th style="width:120px">Status</th><th style="width:75px">Aksi</th></tr></thead>
+            <tbody id="k-tbody"></tbody>
+          </table>
+          <div id="k-empty" style="display:none;text-align:center;padding:2.5rem;color:var(--text3);font-size:13px">
+            <div style="font-size:32px;margin-bottom:8px">📭</div>Belum ada kendala tercatat
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;padding:.875rem 1.25rem;border-top:1px solid var(--border)">
+          <button class="btn btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn btn-sm" onclick="exportJSON()">⬇ Export JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ROUTES ═══ -->
+    <div class="section" id="sec-routes">
+      <div class="card">
+        <div class="ch"><div class="ct">Route List</div><span class="badge" style="background:#161b22;color:#58a6ff;font-family:'JetBrains Mono',monospace">php artisan route:list</span></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Method</th><th>URI</th><th>Controller / Action</th><th>Middleware</th></tr></thead>
+            <tbody id="route-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PRODUK -->
+<div class="overlay" id="mod-produk">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="mp-title">Tambah Produk</div><button class="mc" onclick="closeModal('mod-produk')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Nama Produk *</label><input type="text" class="fc" id="p-nama" placeholder="cth: Laptop Gaming"></div>
+      <div class="fg"><label class="fl">Deskripsi</label><textarea class="fc" id="p-desc" placeholder="Deskripsi singkat produk..."></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label class="fl">Harga (Rp)</label><input type="number" class="fc" id="p-harga" placeholder="0"></div>
+        <div class="fg"><label class="fl">Stok</label><input type="number" class="fc" id="p-stok" placeholder="0"></div>
+      </div>
+      <div class="fg"><label class="fl">Status</label><select class="fc" id="p-status"><option value="aktif">Aktif</option><option value="nonaktif">Non-aktif</option></select></div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mod-produk')">Batal</button><button class="btn btn-p" onclick="saveProduk()">Simpan</button></div>
+  </div>
+</div>
+
+<!-- MODAL KENDALA -->
+<div class="overlay" id="mod-kendala">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="mk-title">Tambah Kendala</div><button class="mc" onclick="closeModal('mod-kendala')">✕</button></div>
+    <div class="mb">
+      <div class="fg">
+        <label class="fl">Gambar (opsional — drag/paste Ctrl+V)</label>
+        <div class="upzone" id="upzone" tabindex="0"
+          onclick="document.getElementById('k-file').click()"
+          ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)" onpaste="dzPaste(event)">
+          Klik, seret, atau tempel screenshot
+          <input type="file" id="k-file" accept="image/*" style="display:none" onchange="kFileChange(event)">
+          <img id="k-prev" class="prev-img" alt="">
+        </div>
+        <button class="btn btn-sm" id="k-clr-img" style="display:none;margin-top:5px" onclick="kClearImg()">Hapus Gambar</button>
+      </div>
+      <div class="fg"><label class="fl">Deskripsi Kendala *</label><textarea class="fc" id="k-kendala" placeholder="Tuliskan kendala yang terjadi..."></textarea></div>
+      <div class="fg"><label class="fl">Solusi / Tindakan *</label><textarea class="fc" id="k-solusi" placeholder="Apa yang harus dilakukan?"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label class="fl">Status</label><select class="fc" id="k-status"><option value="open">Belum Selesai</option><option value="progress">Diproses</option><option value="done">Selesai</option></select></div>
+        <div class="fg"><label class="fl">Tanggal</label><input type="date" class="fc" id="k-date"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mod-kendala')">Batal</button><button class="btn btn-p" onclick="saveKendala()">Simpan</button></div>
+  </div>
+</div>
+
+<script>
+// ══ DATA JOBDESK ══
+const PHASES=[
+  {id:0,title:"Fase 1",full:"PHP Dasar",days:"Hari 1–15",color:"#6366f1",bg:"#ede9fe",weeks:[
+    {id:"w1",label:"Minggu 1",title:"Sintaks & Variabel",days:"Hari 1–5",tasks:[
+      {t:"Install XAMPP, pastikan PHP berjalan",code:"php -v"},
+      {t:"Tipe data: string, integer, float, boolean, array, null"},
+      {t:"Variabel: $nama, $harga — konvensi penamaan"},
+      {t:"Operator: aritmatika, perbandingan, logika"},
+      {t:"String: echo, print, concatenation dengan titik (.)"},
+      {t:"Perbedaan == dan === (loose vs strict)"},
+      {t:"NULL: isset(), empty()"},
+      {t:"Buat file latihan.php dan jalankan di browser"},
+    ]},
+    {id:"w2",label:"Minggu 1-2",title:"Kondisi, Loop & Function",days:"Hari 6–15",tasks:[
+      {t:"if, else, elseif — kondisi sederhana"},
+      {t:"switch — kondisi banyak pilihan"},
+      {t:"Ternary: $x = kondisi ? 'ya' : 'tidak'"},
+      {t:"for loop — counter",code:"for($i=0;$i<10;$i++)"},
+      {t:"while loop — kondisi"},
+      {t:"foreach — array",code:"foreach($arr as $k=>$v)"},
+      {t:"Function: buat, panggil, return value"},
+      {t:"Parameter & default value"},
+      {t:"Array: push, pop, slice, merge, count, sort"},
+      {t:"Array associative: $user['nama']"},
+      {t:"Array multidimensi: $users[0]['nama']"},
+      {t:"include & require — pisah file"},
+      {t:"Scope variabel: local vs global"},
+      {t:"Latihan: buat program daftar belanja"},
+    ]},
+  ]},
+  {id:1,title:"Fase 2",full:"MySQL Dasar",days:"Hari 16–25",color:"#0891b2",bg:"#cffafe",weeks:[
+    {id:"w3",label:"Minggu 3",title:"SQL & Struktur Tabel",days:"Hari 16–20",tasks:[
+      {t:"Buka phpMyAdmin di localhost"},
+      {t:"CREATE DATABASE latihan",code:"CREATE DATABASE latihan"},
+      {t:"Tipe kolom: INT, VARCHAR, TEXT, DECIMAL, TIMESTAMP"},
+      {t:"Buat tabel produk: id, nama, harga, stok, created_at"},
+      {t:"PRIMARY KEY, AUTO_INCREMENT, NOT NULL, DEFAULT"},
+      {t:"INSERT 5 baris data",code:"INSERT INTO produk VALUES (...)"},
+      {t:"SELECT * FROM produk"},
+      {t:"SELECT kolom tertentu"},
+      {t:"WHERE: filter data",code:"WHERE harga > 10000"},
+      {t:"ORDER BY ASC dan DESC"},
+    ]},
+    {id:"w4",label:"Minggu 3-4",title:"Query Lanjutan & JOIN",days:"Hari 21–25",tasks:[
+      {t:"UPDATE: ubah data",code:"UPDATE produk SET harga=? WHERE id=1"},
+      {t:"DELETE: hapus data"},
+      {t:"LIMIT & OFFSET: pagination"},
+      {t:"COUNT, SUM, AVG, MIN, MAX"},
+      {t:"GROUP BY: kelompokkan data"},
+      {t:"Buat tabel users dan orders"},
+      {t:"Foreign key: hubungkan orders ke users"},
+      {t:"JOIN 2 tabel",code:"SELECT * FROM orders JOIN users ON orders.user_id=users.id"},
+      {t:"LIKE: pencarian",code:"WHERE nama LIKE '%laptop%'"},
+      {t:"Latihan: query laporan total penjualan per user"},
+    ]},
+  ]},
+  {id:2,title:"Fase 3",full:"PHP + MySQL Manual",days:"Hari 26–35",color:"#d97706",bg:"#fef9c3",weeks:[
+    {id:"w5",label:"Minggu 4-5",title:"Koneksi PHP ke MySQL",days:"Hari 26–30",tasks:[
+      {t:"Konek PHP ke MySQL",code:"$conn = mysqli_connect('localhost','root','','db')"},
+      {t:"Cek koneksi berhasil atau gagal"},
+      {t:"Ambil data dari tabel, tampilkan di HTML"},
+      {t:"Buat tabel HTML dari data database"},
+      {t:"Form POST ke PHP dan simpan ke database"},
+      {t:"Validasi input sederhana sebelum simpan"},
+      {t:"Paham SQL injection — kenapa berbahaya"},
+      {t:"Prepared statement untuk keamanan",code:"$stmt = $conn->prepare('INSERT INTO...')"},
+      {t:"Tampilkan pesan sukses/error setelah operasi"},
+    ]},
+    {id:"w6",label:"Minggu 5",title:"CRUD Manual Lengkap",days:"Hari 31–35",tasks:[
+      {t:"Create: form + simpan ke DB"},
+      {t:"Read: tampilkan semua data dalam tabel"},
+      {t:"Update: edit form + ubah data di DB"},
+      {t:"Delete: hapus dengan konfirmasi"},
+      {t:"Pisah koneksi ke config.php dan include"},
+      {t:"Buat header.php dan footer.php"},
+      {t:"Fitur pencarian dengan LIKE"},
+      {t:"Selesaikan 1 CRUD lengkap dari A-Z"},
+    ]},
+  ]},
+  {id:3,title:"Fase 4",full:"Laravel Core",days:"Hari 36–65",color:"#16a34a",bg:"#dcfce7",weeks:[
+    {id:"w7",label:"Minggu 6",title:"Route & Navigation",days:"Hari 36–40",tasks:[
+      {t:"Pastikan Laravel berjalan di example-app.test"},
+      {t:"Route GET, POST, PUT, DELETE",code:"Route::get('/produk', ...)"},
+      {t:"Route parameter: /produk/{id}"},
+      {t:"Route named: ->name('produk.index')"},
+      {t:"Route group: prefix + middleware"},
+      {t:"php artisan route:list",code:"php artisan route:list"},
+      {t:"Redirect antar route"},
+    ]},
+    {id:"w8",label:"Minggu 6-7",title:"Controller & Blade",days:"Hari 41–47",tasks:[
+      {t:"Buat Controller",code:"php artisan make:controller ProdukController"},
+      {t:"7 method: index, create, store, show, edit, update, destroy"},
+      {t:"Kirim data ke view",code:"return view('produk.index', compact('produk'))"},
+      {t:"Blade: {{ $var }}, @if, @foreach, @forelse"},
+      {t:"Layout: @extends, @section, @yield, @include"},
+      {t:"Buat layouts/app.blade.php"},
+      {t:"Blade: @auth, @guest, @isset, @empty"},
+      {t:"{{ url() }}, {{ route() }}, {{ asset() }}"},
+    ]},
+    {id:"w9",label:"Minggu 7-8",title:"Migration, Model & Eloquent",days:"Hari 48–55",tasks:[
+      {t:"Setup .env: DB_DATABASE, DB_USERNAME, DB_PASSWORD"},
+      {t:"Buat migration",code:"php artisan make:migration create_produks_table"},
+      {t:"Jalankan migrate & rollback"},
+      {t:"Buat Model",code:"php artisan make:model Produk"},
+      {t:"$fillable di model"},
+      {t:"Eloquent: all(), find(), where()->get()"},
+      {t:"Eloquent: create(), update(), delete()"},
+      {t:"Seeder + Factory dengan Faker",code:"php artisan db:seed"},
+      {t:"Perbedaan get() vs first() vs find()"},
+      {t:"orderBy, latest, take, paginate"},
+    ]},
+    {id:"w10",label:"Minggu 8-9",title:"CRUD Laravel Lengkap",days:"Hari 56–62",tasks:[
+      {t:"Create: form + @csrf + store() + validate()"},
+      {t:"Validasi: required, min, max, email, unique"},
+      {t:"@error untuk tampilkan pesan validasi"},
+      {t:"old() untuk isi ulang form setelah error"},
+      {t:"Read: tampilkan data DB dalam tabel blade"},
+      {t:"Update: edit form + @method('PUT')"},
+      {t:"Delete: @method('DELETE') + confirm"},
+      {t:"Flash message: ->with('success','...')"},
+      {t:"Pagination: paginate(10) + links()",code:"{{ $produk->links() }}"},
+      {t:"Search: where('nama','LIKE','%'.$q.'%')"},
+    ]},
+    {id:"w11",label:"Minggu 9",title:"Authentication",days:"Hari 63–65",tasks:[
+      {t:"Install Breeze",code:"php artisan breeze:install blade"},
+      {t:"npm install && npm run dev && php artisan migrate"},
+      {t:"Test register, login, logout"},
+      {t:"Proteksi route dengan middleware auth"},
+      {t:"Tampilkan nama user",code:"{{ Auth::user()->name }}"},
+      {t:"Redirect setelah login ke dashboard"},
+    ]},
+  ]},
+  {id:4,title:"Fase 5",full:"Fitur Lanjutan",days:"Hari 66–80",color:"#db2777",bg:"#fce7f3",weeks:[
+    {id:"w12",label:"Minggu 10",title:"Relasi Database",days:"Hari 66–70",tasks:[
+      {t:"hasMany: User punya banyak Produk",code:"return $this->hasMany(Produk::class)"},
+      {t:"belongsTo: Produk milik User"},
+      {t:"Foreign key di migration"},
+      {t:"Eager loading: with()",code:"User::with('produks')->get()"},
+      {t:"withCount(): hitung relasi"},
+      {t:"Buat tabel orders + relasi ke users & produks"},
+      {t:"Laporan: total order per user dari DB"},
+      {t:"Tampilkan data relasi di dashboard"},
+    ]},
+    {id:"w13",label:"Minggu 10-11",title:"File Upload",days:"Hari 71–74",tasks:[
+      {t:"Form upload: enctype multipart/form-data"},
+      {t:"Simpan file ke storage",code:"$request->file('gambar')->store('produk','public')"},
+      {t:"php artisan storage:link"},
+      {t:"Tampilkan gambar",code:"{{ asset('storage/'.$produk->gambar) }}"},
+      {t:"Validasi file: mimes, max size"},
+      {t:"Hapus file lama saat update"},
+    ]},
+    {id:"w14",label:"Minggu 11",title:"API & JSON",days:"Hari 75–78",tasks:[
+      {t:"Route di routes/api.php"},
+      {t:"Return JSON",code:"return response()->json(['data'=>$produk])"},
+      {t:"API Resource",code:"php artisan make:resource ProdukResource"},
+      {t:"Test API dengan Postman / Thunder Client"},
+      {t:"GET /api/produk — list semua"},
+      {t:"POST /api/produk — simpan"},
+    ]},
+    {id:"w15",label:"Minggu 11-12",title:"Dashboard Konek MySQL",days:"Hari 79–80",tasks:[
+      {t:"DashboardController dengan data dari DB"},
+      {t:"totalProduk = Produk::count()",code:"Produk::count()"},
+      {t:"totalStok = Produk::sum('stok')"},
+      {t:"totalNilai = Produk::sum('harga')"},
+      {t:"produkTerbaru = Produk::latest()->take(5)->get()"},
+      {t:"Tampilkan semua di dashboard.blade.php"},
+      {t:"Chart dari data DB dengan Chart.js"},
+      {t:"Semua angka dashboard dari MySQL — bukan hardcode"},
+      {t:"Refresh = data update dari DB realtime"},
+    ]},
+  ]},
+  {id:5,title:"Fase 6",full:"Project Nyata",days:"Hari 81–90",color:"#7c3aed",bg:"#ede9fe",weeks:[
+    {id:"w16",label:"Minggu 12-13",title:"Perencanaan Project",days:"Hari 81–83",tasks:[
+      {t:"Pilih project: toko online / kasir / blog admin"},
+      {t:"Buat daftar fitur"},
+      {t:"Desain tabel: entitas, kolom, relasi"},
+      {t:"Buat semua migration dan jalankan"},
+      {t:"Buat semua Model dengan relasi"},
+      {t:"Seeder dengan data dummy realistis"},
+      {t:"Setup Breeze authentication"},
+      {t:"Buat layout utama dengan sidebar dan navbar"},
+    ]},
+    {id:"w17",label:"Minggu 13",title:"Fitur Utama",days:"Hari 84–87",tasks:[
+      {t:"CRUD entitas utama (contoh: Produk)"},
+      {t:"CRUD entitas kedua (contoh: Kategori)"},
+      {t:"Implementasi relasi di project"},
+      {t:"Upload gambar produk"},
+      {t:"Pencarian dan filter data"},
+      {t:"Pagination semua halaman list"},
+      {t:"Flash message sukses dan error"},
+      {t:"Validasi semua form"},
+    ]},
+    {id:"w18",label:"Minggu 13-14",title:"Dashboard & Finishing",days:"Hari 88–90",tasks:[
+      {t:"Dashboard utama dengan statistik dari MySQL"},
+      {t:"Chart data dengan Chart.js"},
+      {t:"Semua angka dari query Eloquent"},
+      {t:"Proteksi halaman dengan middleware auth"},
+      {t:"Nama user login di navbar"},
+      {t:"Test semua fitur dari awal sampai akhir"},
+      {t:"Tidak ada error 500 atau query gagal"},
+      {t:"Project berjalan sempurna di example-app.test"},
+      {t:"Bisa jelaskan: Route > Controller > Model > DB > View"},
+      {t:"SELESAI — Dashboard konek MySQL, semua fitur berjalan ✅"},
+    ]},
+  ]},
+];
+
+const ROUTES=[
+  {method:'GET',uri:'/',ctrl:'HomeController@index',mw:'web'},
+  {method:'GET',uri:'/home',ctrl:'HomeController@home',mw:'web'},
+  {method:'GET',uri:'/dashboard',ctrl:'DashboardController@index',mw:'auth'},
+  {method:'GET',uri:'/produk',ctrl:'ProdukController@index',mw:'auth'},
+  {method:'GET',uri:'/produk/create',ctrl:'ProdukController@create',mw:'auth'},
+  {method:'POST',uri:'/produk',ctrl:'ProdukController@store',mw:'auth'},
+  {method:'GET',uri:'/produk/{id}/edit',ctrl:'ProdukController@edit',mw:'auth'},
+  {method:'PUT',uri:'/produk/{id}',ctrl:'ProdukController@update',mw:'auth'},
+  {method:'DELETE',uri:'/produk/{id}',ctrl:'ProdukController@destroy',mw:'auth'},
+  {method:'GET',uri:'/api/produk',ctrl:'API\\ProdukController@index',mw:'api'},
+  {method:'POST',uri:'/api/produk',ctrl:'API\\ProdukController@store',mw:'api'},
+  {method:'GET',uri:'/login',ctrl:'AuthController@login',mw:'guest'},
+  {method:'POST',uri:'/login',ctrl:'AuthController@authenticate',mw:'guest'},
+  {method:'POST',uri:'/logout',ctrl:'AuthController@logout',mw:'auth'},
+];
+
+// ══ STATE ══
+let produkData=[], kendalaData=[], jdState={}, kEditId=null, pEditId=null, kImg=null;
+let chartP=null, chartL=null;
+
+function loadAll(){
+  try{
+    const p=localStorage.getItem('lv_produk'); if(p) produkData=JSON.parse(p);
+    const k=localStorage.getItem('lv_kendala'); if(k) kendalaData=JSON.parse(k);
+    const j=localStorage.getItem('lv_jdstate'); if(j) jdState=JSON.parse(j);
+  }catch(e){}
+}
+
+function saveAll(){
+  try{
+    localStorage.setItem('lv_produk',JSON.stringify(produkData));
+    localStorage.setItem('lv_kendala',JSON.stringify(kendalaData));
+    localStorage.setItem('lv_jdstate',JSON.stringify(jdState));
+  }catch(e){}
+}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function pad(n){return String(n).padStart(2,'0')}
+function today(){const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function fmtDate(s){if(!s)return'-';const[y,m,d]=s.split('-');return `${d}/${m}/${y}`}
+function fmtRp(n){return 'Rp '+Number(n||0).toLocaleString('id-ID')}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ══ NAV ══
+const titles={dashboard:'Dashboard',produk:'Produk',users:'Users',laporan:'Laporan',jobdesk:'Jobdesk 90 Hari',kendala:'Kendala Teknis',routes:'Route List'};
+function go(name,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-'+name).classList.add('on');
+  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('on'));
+  if(el) el.classList.add('on');
+  else document.querySelectorAll('.nav').forEach(n=>{if(n.textContent.toLowerCase().includes(name.slice(0,4)))n.classList.add('on')});
+  document.getElementById('pg-title').textContent=titles[name]||name;
+  document.getElementById('pg-crumb').textContent='example-app.test / '+name;
+  if(name==='laporan'){renderLaporan();setTimeout(initChartL,100);}
+  if(name==='jobdesk') renderJobdesk();
+  if(name==='kendala') renderKendala();
+  if(name==='routes') renderRoutes();
+  updateStats();
+}
+
+// ══ STATS ══
+function getJdStats(){
+  let total=0,done=0;
+  PHASES.forEach(ph=>ph.weeks.forEach(w=>w.tasks.forEach((_,i)=>{total++;if(jdState[w.id+'_'+i])done++;})));
+  return{total,done};
+}
+
+function updateStats(){
+  const{total,done}=getJdStats();
+  const pct=total>0?Math.round(done/total*100):0;
+  const openK=kendalaData.filter(k=>k.status==='open').length;
+
+  document.getElementById('d-produk').textContent=produkData.length;
+  document.getElementById('d-prog').textContent=pct+'%';
+  document.getElementById('d-prog-sub').textContent=done+'/'+total+' tugas';
+  document.getElementById('d-kendala').textContent=openK;
+  document.getElementById('nb-p').textContent=produkData.length;
+  document.getElementById('nb-k').textContent=openK;
+  document.getElementById('ndot').style.display=openK>0?'block':'none';
+
+  document.getElementById('ks-t').textContent=kendalaData.length;
+  document.getElementById('ks-o').textContent=openK;
+  document.getElementById('ks-p').textContent=kendalaData.filter(k=>k.status==='progress').length;
+  document.getElementById('ks-d').textContent=kendalaData.filter(k=>k.status==='done').length;
+
+  document.getElementById('jd-done').textContent=done;
+  document.getElementById('jd-total').textContent=total;
+  document.getElementById('jd-pct').textContent=pct+'%';
+
+  renderDashPhases();
+  updateChartP();
+}
+
+// ══ DASHBOARD PHASES ══
+function renderDashPhases(){
+  const el=document.getElementById('d-phaselist');
+  if(!el)return;
+  el.innerHTML=PHASES.map(ph=>{
+    let t=0,d=0;
+    ph.weeks.forEach(w=>w.tasks.forEach((_,i)=>{t++;if(jdState[w.id+'_'+i])d++;}));
+    const pct=t>0?Math.round(d/t*100):0;
+    const color=pct===100?'var(--success)':pct>50?'var(--accent)':'var(--warn)';
+    return `<div class="prow">
+      <span class="plabel" style="color:${ph.color};font-weight:500">${ph.title}: ${ph.full}</span>
+      <div class="ptrack"><div class="pfill" style="width:${pct}%;background:${color}"></div></div>
+      <span class="ppct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ══ CHART PROGRESS ══
+function updateChartP(){
+  const ctx=document.getElementById('chartProgress');
+  if(!ctx)return;
+  const labels=PHASES.map(p=>p.title);
+  const data=PHASES.map(ph=>{
+    let t=0,d=0;
+    ph.weeks.forEach(w=>w.tasks.forEach((_,i)=>{t++;if(jdState[w.id+'_'+i])d++;}));
+    return t>0?Math.round(d/t*100):0;
+  });
+  const colors=['rgba(99,102,241,.8)','rgba(8,145,178,.8)','rgba(217,119,6,.8)','rgba(22,163,74,.8)','rgba(219,39,119,.8)','rgba(124,58,237,.8)'];
+  if(chartP) chartP.destroy();
+  chartP=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Progress (%)',data,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+}
+
+// ══ LAPORAN ══
+function renderLaporan(){
+  const{total,done}=getJdStats();
+  const pct=total>0?Math.round(done/total*100):0;
+  const doneK=kendalaData.filter(k=>k.status==='done').length;
+  const doneKpct=kendalaData.length>0?Math.round(doneK/kendalaData.length*100):0;
+  const maxP=Math.max(produkData.length,1);
+  const maxS=Math.max(produkData.reduce((a,p)=>a+parseInt(p.stok||0),0),1);
+  document.getElementById('lp1').style.width=Math.min(100,produkData.length/maxP*100)+'%';
+  document.getElementById('lv1').textContent=produkData.length;
+  document.getElementById('lp2').style.width='80%';
+  document.getElementById('lv2').textContent=produkData.reduce((a,p)=>a+parseInt(p.stok||0),0);
+  document.getElementById('lp3').style.width=pct+'%';
+  document.getElementById('lv3').textContent=pct+'%';
+  document.getElementById('lp4').style.width=doneKpct+'%';
+  document.getElementById('lv4').textContent=doneKpct+'%';
+  document.getElementById('lstat1').textContent=produkData.filter(p=>p.status==='aktif').length;
+  document.getElementById('lstat2').textContent=kendalaData.filter(k=>k.status==='open').length;
+}
+
+function initChartL(){
+  const ctx=document.getElementById('chartLaporan');
+  if(!ctx)return;
+  if(chartL)chartL.destroy();
+  const aktif=produkData.filter(p=>p.status==='aktif').length;
+  const nona=produkData.filter(p=>p.status==='nonaktif').length;
+  chartL=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['Aktif','Non-aktif'],datasets:[{data:[aktif||1,nona],backgroundColor:['rgba(37,99,235,.8)','rgba(220,38,38,.8)'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}
+  });
+}
+
+// ══ PRODUK CRUD ══
+function openAddProduk(){
+  pEditId=null;
+  document.getElementById('mp-title').textContent='Tambah Produk';
+  ['p-nama','p-desc','p-harga','p-stok'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p-status').value='aktif';
+  document.getElementById('mod-produk').classList.add('on');
+}
+
+function editProduk(id){
+  const p=produkData.find(x=>x.id===id);if(!p)return;
+  pEditId=id;
+  document.getElementById('mp-title').textContent='Edit Produk';
+  document.getElementById('p-nama').value=p.nama;
+  document.getElementById('p-desc').value=p.desc||'';
+  document.getElementById('p-harga').value=p.harga||0;
+  document.getElementById('p-stok').value=p.stok||0;
+  document.getElementById('p-status').value=p.status||'aktif';
+  document.getElementById('mod-produk').classList.add('on');
+}
+
+function saveProduk(){
+  const nama=document.getElementById('p-nama').value.trim();
+  if(!nama){alert('Nama produk wajib diisi!');return;}
+  const item={nama,desc:document.getElementById('p-desc').value.trim(),harga:parseInt(document.getElementById('p-harga').value)||0,stok:parseInt(document.getElementById('p-stok').value)||0,status:document.getElementById('p-status').value};
+  if(pEditId){const i=produkData.findIndex(x=>x.id===pEditId);if(i>=0)produkData[i]={...produkData[i],...item};}
+  else produkData.unshift({id:uid(),...item,created:today()});
+  saveAll();closeModal('mod-produk');renderProduk();updateStats();
+  const act=document.getElementById('d-activity');
+  if(act){const d=document.createElement('div');d.className='act-item';d.innerHTML=`<div class="act-dot" style="background:#eff6ff">📦</div><div><div class="act-text">Produk "${nama}" ${pEditId?'diupdate':'ditambahkan'}</div><div class="act-time">Baru saja</div></div>`;act.insertBefore(d,act.firstChild);if(act.children.length>5)act.lastChild.remove();}
+}
+
+function deleteProduk(id){
+  if(!confirm('Hapus produk ini?'))return;
+  produkData=produkData.filter(x=>x.id!==id);
+  saveAll();renderProduk();updateStats();
+}
+
+function renderProduk(){
+  const q=(document.getElementById('p-search')||{}).value||'';
+  const fs=(document.getElementById('p-filter')||{}).value||'';
+  const filtered=produkData.filter(p=>{
+    const mQ=!q||p.nama.toLowerCase().includes(q.toLowerCase());
+    const mS=!fs||p.status===fs;
+    return mQ&&mS;
+  });
+  const tbody=document.getElementById('p-tbody');
+  const empty=document.getElementById('p-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map((p,i)=>`<tr>
+    <td style="color:var(--text3);font-size:12px">${i+1}</td>
+    <td><div style="display:flex;align-items:center;gap:9px">
+      <div style="width:34px;height:34px;border-radius:9px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">📦</div>
+      <div><div style="font-weight:500;font-size:13px">${esc(p.nama)}</div><div style="font-size:11px;color:var(--text3)">${fmtDate(p.created)}</div></div>
+    </div></td>
+    <td style="font-size:12px;color:var(--text2);max-width:180px"><div style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.desc||'-')}</div></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${fmtRp(p.harga)}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:13px">${p.stok||0}</td>
+    <td>${p.status==='aktif'?'<span class="badge bs">● Aktif</span>':'<span class="badge bd">● Non-aktif</span>'}</td>
+    <td><div style="display:flex;gap:4px">
+      <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px" onclick="editProduk('${p.id}')" title="Edit">✏️</button>
+      <button style="width:26px;height:26px;border-radius:6px;border:1px solid #fecaca;background:var(--danger-light);cursor:pointer;font-size:12px" onclick="deleteProduk('${p.id}')" title="Hapus">🗑️</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ══ KENDALA CRUD ══
+function openAddKendala(){
+  kEditId=null;kImg=null;
+  document.getElementById('mk-title').textContent='Tambah Kendala';
+  ['k-kendala','k-solusi'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('k-status').value='open';
+  document.getElementById('k-date').value=today();
+  document.getElementById('k-prev').style.display='none';
+  document.getElementById('k-clr-img').style.display='none';
+  document.getElementById('k-file').value='';
+  document.getElementById('mod-kendala').classList.add('on');
+}
+
+function editKendala(id){
+  const k=kendalaData.find(x=>x.id===id);if(!k)return;
+  kEditId=id;kImg=k.img||null;
+  document.getElementById('mk-title').textContent='Edit Kendala';
+  document.getElementById('k-kendala').value=k.kendala;
+  document.getElementById('k-solusi').value=k.solusi;
+  document.getElementById('k-status').value=k.status;
+  document.getElementById('k-date').value=k.date;
+  const p=document.getElementById('k-prev');
+  if(k.img){p.src=k.img;p.style.display='block';document.getElementById('k-clr-img').style.display='inline-flex';}
+  else{p.style.display='none';document.getElementById('k-clr-img').style.display='none';}
+  document.getElementById('mod-kendala').classList.add('on');
+}
+
+function saveKendala(){
+  const kendala=document.getElementById('k-kendala').value.trim();
+  const solusi=document.getElementById('k-solusi').value.trim();
+  if(!kendala){alert('Deskripsi kendala wajib!');return;}
+  if(!solusi){alert('Solusi wajib diisi!');return;}
+  const item={kendala,solusi,status:document.getElementById('k-status').value,date:document.getElementById('k-date').value||today(),img:kImg};
+  if(kEditId){const i=kendalaData.findIndex(x=>x.id===kEditId);if(i>=0)kendalaData[i]={...kendalaData[i],...item};}
+  else kendalaData.unshift({id:uid(),...item});
+  saveAll();closeModal('mod-kendala');renderKendala();updateStats();
+}
+
+function deleteKendala(id){
+  if(!confirm('Hapus kendala ini?'))return;
+  kendalaData=kendalaData.filter(x=>x.id!==id);
+  saveAll();renderKendala();updateStats();
+}
+
+function changeKStatus(id,val){
+  const i=kendalaData.findIndex(x=>x.id===id);
+  if(i>=0){kendalaData[i].status=val;saveAll();updateStats();}
+}
+
+function renderKendala(){
+  const q=(document.getElementById('k-search')||{}).value||'';
+  const fs=(document.getElementById('k-filter')||{}).value||'';
+  const filtered=kendalaData.filter(k=>{
+    const mQ=!q||k.kendala.toLowerCase().includes(q.toLowerCase())||k.solusi.toLowerCase().includes(q.toLowerCase());
+    const mS=!fs||k.status===fs;
+    return mQ&&mS;
+  });
+  const tbody=document.getElementById('k-tbody');
+  const empty=document.getElementById('k-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(k=>`<tr>
+    <td>${k.img?`<img src="${k.img}" style="width:56px;height:42px;object-fit:cover;border-radius:7px;cursor:pointer;border:1px solid var(--border)" onclick="viewImg('${k.id}')">`:'<div style="width:56px;height:42px;background:var(--surface2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px dashed var(--border)">🖼</div>'}</td>
+    <td><div style="font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(k.kendala)}</div></td>
+    <td><div style="font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(k.solusi)}</div></td>
+    <td style="font-size:11px;color:var(--text3)">${fmtDate(k.date)}</td>
+    <td><select style="font-size:11px;border:1px solid var(--border);border-radius:100px;padding:3px 7px;background:var(--surface2);cursor:pointer;width:100%;font-family:'Sora',sans-serif;color:var(--text2)" onchange="changeKStatus('${k.id}',this.value)">
+      <option value="open" ${k.status==='open'?'selected':''}>Belum Selesai</option>
+      <option value="progress" ${k.status==='progress'?'selected':''}>Diproses</option>
+      <option value="done" ${k.status==='done'?'selected':''}>Selesai</option>
+    </select></td>
+    <td><div style="display:flex;gap:4px">
+      <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;font-size:12px" onclick="editKendala('${k.id}')">✏️</button>
+      <button style="width:26px;height:26px;border-radius:6px;border:1px solid #fecaca;background:var(--danger-light);cursor:pointer;font-size:12px" onclick="deleteKendala('${k.id}')">🗑️</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function viewImg(id){
+  const k=kendalaData.find(x=>x.id===id);
+  if(!k||!k.img)return;
+  const w=window.open('');
+  w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${k.img}" style="max-width:95vw;max-height:95vh;border-radius:8px"></body></html>`);
+}
+
+// Export
+function exportCSV(){
+  const rows=kendalaData.map(k=>[k.id,`"${(k.kendala||'').replace(/"/g,'""')}"`,`"${(k.solusi||'').replace(/"/g,'""')}"`,k.status,k.date]);
+  const csv=[['ID','Kendala','Solusi','Status','Tanggal'],...rows].map(r=>r.join(',')).join('\n');
+  dlBlob(new Blob(['\uFEFF'+csv],{type:'text/csv'}),'kendala_'+today()+'.csv');
+}
+function exportJSON(){
+  dlBlob(new Blob([JSON.stringify(kendalaData.map(({id,kendala,solusi,status,date})=>({id,kendala,solusi,status,date})),null,2)],{type:'application/json'}),'kendala_'+today()+'.json');
+}
+function dlBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
+
+// ══ UPLOAD ══
+function dzOver(e){e.preventDefault();document.getElementById('upzone').classList.add('drag')}
+function dzLeave(){document.getElementById('upzone').classList.remove('drag')}
+function dzDrop(e){e.preventDefault();dzLeave();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))readKImg(f)}
+function dzPaste(e){const its=(e.clipboardData||e.originalEvent.clipboardData).items;for(let i in its){if(its[i].type.indexOf('image')!==-1){readKImg(its[i].getAsFile());e.preventDefault();break;}}}
+function kFileChange(e){const f=e.target.files[0];if(f)readKImg(f)}
+function readKImg(file){const r=new FileReader();r.onload=ev=>{kImg=ev.target.result;const p=document.getElementById('k-prev');p.src=kImg;p.style.display='block';document.getElementById('k-clr-img').style.display='inline-flex'};r.readAsDataURL(file)}
+function kClearImg(){kImg=null;document.getElementById('k-prev').style.display='none';document.getElementById('k-clr-img').style.display='none';document.getElementById('k-file').value=''}
+
+// ══ JOBDESK ══
+function renderJobdesk(){
+  const tabsEl=document.getElementById('phase-tabs');
+  const contEl=document.getElementById('phase-content');
+  tabsEl.innerHTML=PHASES.map((ph,i)=>`<button class="ptab ${i===0?'on':''}" onclick="switchPhase(${i},this)">${ph.title}: ${ph.full}</button>`).join('');
+  contEl.innerHTML=PHASES.map((ph,i)=>`<div class="ph-sec ${i===0?'on':''}" id="phsec-${i}">
+    <div class="ph-header">
+      <div class="ph-title" style="color:${ph.color}">${ph.title} — ${ph.full} <span style="font-size:11px;color:var(--text3);font-weight:400">${ph.days}</span></div>
+    </div>
+    ${ph.weeks.map(w=>{
+      const done=w.tasks.filter((_,i)=>jdState[w.id+'_'+i]).length;
+      const pct=Math.round(done/w.tasks.length*100);
+      const c=pct===100?'var(--success)':pct>50?'var(--accent)':'var(--warn)';
+      return `<div class="wcard">
+        <div class="whead" onclick="toggleWeek('${w.id}')">
+          <span class="wbadge" style="background:${ph.bg};color:${ph.color}">${w.label}</span>
+          <span class="wtitle">${w.title}</span>
+          <span class="wmeta" id="wm-${w.id}">${done}/${w.tasks.length}</span>
+          <span class="wpct" id="wp-${w.id}" style="color:${c}">${pct}%</span>
+          <span style="font-size:10px;color:var(--text3);margin-left:4px" id="wa-${w.id}">${jdState['open_'+w.id]?'▲':'▼'}</span>
+        </div>
+        <div class="wbar-wrap"><div class="wbar-fill" id="wb-${w.id}" style="width:${pct}%;background:${c}"></div></div>
+        <div class="wbody ${jdState['open_'+w.id]?'on':''}" id="wbody-${w.id}">
+          ${w.tasks.map((task,i)=>{
+            const checked=jdState[w.id+'_'+i]||false;
+            const note=jdState['note_'+w.id+'_'+i]||'';
+            return `<div class="trow">
+              <input type="checkbox" class="tcb" ${checked?'checked':''} onchange="toggleTask('${w.id}',${i},this.checked)">
+              <div class="tcontent">
+                <div class="ttext${checked?' done':''}" id="tt-${w.id}-${i}">${esc(task.t)}</div>
+                ${task.code?`<span class="tcode">${esc(task.code)}</span>`:''}
+                <button class="tnote-btn" onclick="toggleNote('${w.id}',${i})">${note?'📝 Catatan':'+ Catatan'}</button>
+                <textarea class="tnote ${note?'on':''}" id="tn-${w.id}-${i}" placeholder="Tulis catatan hasil..." onchange="saveNote('${w.id}',${i},this.value)">${esc(note)}</textarea>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`).join('');
+}
+
+function switchPhase(idx,el){
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.ph-sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('phsec-'+idx).classList.add('on');
+}
+
+function toggleWeek(wid){
+  jdState['open_'+wid]=!jdState['open_'+wid];
+  saveAll();
+  document.getElementById('wbody-'+wid).classList.toggle('on',jdState['open_'+wid]);
+  document.getElementById('wa-'+wid).textContent=jdState['open_'+wid]?'▲':'▼';
+}
+
+function toggleTask(wid,i,val){
+  jdState[wid+'_'+i]=val;
+  saveAll();
+  const tt=document.getElementById('tt-'+wid+'-'+i);
+  if(tt)tt.className='ttext'+(val?' done':'');
+  let t=0,d=0;
+  PHASES.forEach(ph=>ph.weeks.forEach(w=>{if(w.id===wid){t=w.tasks.length;d=w.tasks.filter((_,j)=>jdState[wid+'_'+j]).length;}}));
+  const pct=Math.round(d/t*100);
+  const c=pct===100?'var(--success)':pct>50?'var(--accent)':'var(--warn)';
+  const wm=document.getElementById('wm-'+wid);const wp=document.getElementById('wp-'+wid);const wb=document.getElementById('wb-'+wid);
+  if(wm)wm.textContent=d+'/'+t;
+  if(wp){wp.textContent=pct+'%';wp.style.color=c;}
+  if(wb){wb.style.width=pct+'%';wb.style.background=c;}
+  updateStats();
+}
+
+function toggleNote(wid,i){
+  const el=document.getElementById('tn-'+wid+'-'+i);
+  if(el)el.classList.toggle('on');
+}
+
+function saveNote(wid,i,val){
+  jdState['note_'+wid+'_'+i]=val;
+  saveAll();
+}
+
+// ══ ROUTES ══
+function renderRoutes(){
+  const mColors={GET:'bb',POST:'bs',PUT:'bw',DELETE:'bd',PATCH:'bw'};
+  const mwColors={auth:'bw',web:'bg',guest:'bb',api:'bp'};
+  document.getElementById('route-tbody').innerHTML=ROUTES.map(r=>`<tr>
+    <td><span class="badge ${mColors[r.method]||'bg'}">${r.method}</span></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${r.uri}</td>
+    <td style="font-size:12px;color:var(--text2)">${r.ctrl}</td>
+    <td><span class="badge ${mwColors[r.mw]||'bg'}">${r.mw}</span></td>
+  </tr>`).join('');
+}
+
+// ══ MODAL ══
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('mod-produk');closeModal('mod-kendala')}});
+document.getElementById('mod-produk').addEventListener('click',e=>{if(e.target===document.getElementById('mod-produk'))closeModal('mod-produk')});
+document.getElementById('mod-kendala').addEventListener('click',e=>{if(e.target===document.getElementById('mod-kendala'))closeModal('mod-kendala')});
+
+// ══ INIT ══
+loadAll();
+document.getElementById('u-joined').textContent=fmtDate(today());
+renderProduk();
+renderKendala();
+renderRoutes();
+updateStats();
+setTimeout(updateChartP,200);
+</script>
+</body>
+</html>
